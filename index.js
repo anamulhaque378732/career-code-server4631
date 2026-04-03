@@ -14,9 +14,6 @@ app.use(express.json())
 
 
 
-
-
-
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.uzupc.mongodb.net/?appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -39,9 +36,6 @@ async function run() {
 
 
 
-
-
-
         app.get('/jobs', async (req, res) => {
 
             const cursor = jobsCollection.find();
@@ -61,6 +55,36 @@ async function run() {
             res.send(result)
         });
 
+        // get application data
+
+        app.get('/applications', async (req, res) => {
+            const email = req.query.email;
+            const query = { applicant: email }
+
+            const result = await applicationCollection.find(query).toArray();
+            // bad way to aggregate data
+
+            for (const application of result) {
+                const jobId = application.jobId;
+                const jobQuery = { _id: new ObjectId(jobId) }
+                const job = await jobsCollection.findOne(jobQuery)
+
+                application.title = job.title;
+                application.company = job.company;
+                application.company_logo = job.company_logo;
+
+
+            };
+
+
+
+            res.send(result)
+
+        });
+
+
+
+
         // job application related api
 
 
@@ -72,11 +96,6 @@ async function run() {
             res.send(result)
 
         });
-
-
-
-
-
 
 
 
@@ -93,9 +112,6 @@ run().catch(console.dir);
 
 
 
-
-
-
 app.get("/", (req, res) => {
     res.send("career code server running")
 
@@ -105,27 +121,6 @@ app.listen(port, () => {
     console.log(`career code server running on ${port}`);
 
 })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
